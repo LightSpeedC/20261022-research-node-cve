@@ -13,10 +13,11 @@
 	--accent: var(--navy1); --accent2: var(--navy2); --soft: #f2f5fb;
 }
 .ch01 { --accent: hsl(280,78%,25%); --accent2: hsl(280,58%,55%); --soft: hsl(280,28%,95%); }
-.ch02 { --accent: hsl(210,78%,25%); --accent2: hsl(210,58%,55%); --soft: hsl(210,28%,95%); }
-.ch03 { --accent: hsl(140,78%,25%); --accent2: hsl(140,58%,55%); --soft: hsl(140,28%,95%); }
-.ch04 { --accent: hsl(70,78%,25%); --accent2: hsl(70,58%,55%); --soft: hsl(70,28%,95%); }
-.ch05 { --accent: hsl(0,78%,25%); --accent2: hsl(0,58%,55%); --soft: hsl(0,28%,95%); }
+.ch02 { --accent: hsl(224,78%,25%); --accent2: hsl(224,58%,55%); --soft: hsl(224,28%,95%); }
+.ch03 { --accent: hsl(168,78%,25%); --accent2: hsl(168,58%,55%); --soft: hsl(168,28%,95%); }
+.ch04 { --accent: hsl(112,78%,25%); --accent2: hsl(112,58%,55%); --soft: hsl(112,28%,95%); }
+.ch05 { --accent: hsl(56,78%,25%); --accent2: hsl(56,58%,55%); --soft: hsl(56,28%,95%); }
+.ch06 { --accent: hsl(0,78%,25%); --accent2: hsl(0,58%,55%); --soft: hsl(0,28%,95%); }
 body { margin: 0; background: #fff; color: var(--ink); font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", sans-serif; font-size: 15.5px; line-height: 1.85; }
 a { color: var(--link); background: transparent; }
 .titlebar { background: linear-gradient(135deg, var(--navy1, #12224d), var(--navy2, #2f5fbf)); color: #fff; padding: 34px 30px 30px; }
@@ -72,7 +73,8 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <li class="ch02"><a href="#ch02">脆弱性の一覧と仕組み</a></li>
 <li class="ch03"><a href="#ch03">どの使い方で影響するか（Web・CLI）</a></li>
 <li class="ch04"><a href="#ch04">Node.js 20 を使っている場合</a></li>
-<li class="ch05"><a href="#ch05">対処</a></li>
+<li class="ch05"><a href="#ch05">Node.js 20 から 26 で変わること・非互換</a></li>
+<li class="ch06"><a href="#ch06">対処</a></li>
 </ol>
 </nav>
 
@@ -155,6 +157,64 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 </section>
 
 <section class="ch05" id="ch05">
+<h1>Node.js 20 から 26 で変わること・非互換</h1>
+<p>20 から 26 へは 6 メジャー分（21〜26）の変更をまたぐ。公式の移行ガイドは <a href="https://nodejs.org/en/blog/migrations/v20-to-v22">v20→v22</a> と <a href="https://nodejs.org/en/blog/migrations/v22-to-v24">v22→v24</a> の 2 本があり、v24→v26 のガイドは見つからなかった。<strong>まず 24 へ上げ、続けて 26 を試す</strong>二段の移行が現実的。</p>
+
+<h2>主要な版の推移</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Node.js</th><th>V8</th><th>NODE_MODULE_VERSION</th><th>npm</th><th>OpenSSL</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">20.0</td><td>11.3</td><td>115</td><td>9.6</td><td>3.0 系</td></tr>
+<tr><td class="nowrap">22.0</td><td>12.4</td><td>127</td><td>10.5</td><td>3.0 系</td></tr>
+<tr><td class="nowrap">24.0</td><td>13.6</td><td>137</td><td>11.0</td><td>3.5</td></tr>
+<tr><td class="nowrap">26.0</td><td>14.6</td><td>147</td><td>11.12</td><td>3.5</td></tr>
+</tbody></table></div>
+
+<h2>非互換になりやすい点</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>分類</th><th>変更</th><th>版</th><th>影響と対処</th></tr></thead>
+<tbody>
+<tr><td>ネイティブアドオン</td><td>NODE_MODULE_VERSION が 115→147。V8 の C++ API も変更。ビルドに C++20 が必要</td><td class="nowrap">毎版</td><td><span class="badge b-ng">要再ビルド</span> node-gyp 製の依存はすべて作り直し。prebuild の対応を確認。Node-API 製なら影響は小さい</td></tr>
+<tr><td>TLS</td><td>OpenSSL 3.5 の既定セキュリティレベル 2。2048 bit 未満の RSA・DH 鍵、224 bit 未満の ECC 鍵、RC4 を拒否</td><td class="nowrap">24</td><td><span class="badge b-ng">接続失敗</span> 古い証明書の社内サーバや機器への TLS 接続が通らなくなる</td></tr>
+<tr><td>Windows</td><td><code>.bat</code>・<code>.cmd</code> を <code>spawn</code> で直接起動できない（CVE-2024-27980 対策）</td><td class="nowrap">20 の後期・22</td><td><span class="badge b-warn">要修正</span> <code>shell: true</code> を付ける</td></tr>
+<tr><td>Windows</td><td>32 bit（x86）版の提供終了</td><td class="nowrap">23</td><td><span class="badge b-ng">動かない</span> 32 bit Windows は移行先が無い</td></tr>
+<tr><td>モジュール</td><td>import assertions（<code>assert { type: 'json' }</code>）を削除</td><td class="nowrap">22</td><td><span class="badge b-warn">要修正</span> <code>with { type: 'json' }</code> に書き換え（20 でも動く書き方）</td></tr>
+<tr><td>モジュール</td><td><code>require()</code> で ESM を読める（require(esm)）が既定</td><td class="nowrap">22.12・23</td><td><span class="badge b-warn">挙動変化</span> <code>ERR_REQUIRE_ESM</code> を捕まえて分岐するコードが別の経路に入る</td></tr>
+<tr><td>削除された API</td><td><code>crypto.createCipher</code>・<code>createDecipher</code></td><td class="nowrap">22</td><td><span class="badge b-ng">実行時エラー</span> <code>createCipheriv</code> へ</td></tr>
+<tr><td>削除された API</td><td><code>util.isString()</code> 等の <code>util.isX()</code> 群・<code>util._extend</code>・<code>util.log</code></td><td class="nowrap">23</td><td><span class="badge b-ng">実行時エラー</span> <code>typeof</code>・<code>Array.isArray</code>・<code>Object.assign</code> へ。古い依存パッケージで踏みやすい</td></tr>
+<tr><td>削除された API</td><td><code>tls.createSecurePair()</code>、<code>fs.Dirent.path</code>（→<code>parentPath</code>）、<code>OutgoingMessage._headers</code></td><td class="nowrap">24</td><td><span class="badge b-ng">実行時エラー</span> codemod あり</td></tr>
+<tr><td>削除された API</td><td><code>fs.F_OK</code> 等（→<code>fs.constants.F_OK</code>）、<code>SlowBuffer</code>、<code>assert.CallTracker</code></td><td class="nowrap">25</td><td><span class="badge b-ng">実行時エラー</span></td></tr>
+<tr><td>削除された API</td><td><code>http.Server</code> の <code>writeHeader()</code>、<code>_stream_readable</code> 等の内部モジュール、<code>--experimental-transform-types</code></td><td class="nowrap">26</td><td><span class="badge b-ng">実行時エラー</span> 古いストリーム系の依存に注意</td></tr>
+<tr><td>非推奨（警告）</td><td><code>url.parse()</code>（実行時警告）、組み込み <code>punycode</code>、<code>module.register()</code></td><td class="nowrap">21〜26</td><td><span class="badge b-warn">警告</span> WHATWG <code>URL</code> へ</td></tr>
+<tr><td>CLI フラグ</td><td><code>--experimental-permission</code> → <code>--permission</code></td><td class="nowrap">24</td><td><span class="badge b-warn">要修正</span> 起動スクリプトの書き換え</td></tr>
+<tr><td>同梱物</td><td>Corepack を同梱しなくなった</td><td class="nowrap">25</td><td><span class="badge b-warn">要修正</span> <code>corepack enable</code> 前提の CI・Dockerfile は <code>npm i -g corepack</code> 等が必要</td></tr>
+<tr><td>テスト</td><td>テストランナのサブテストを自動で await。既定のレポータが <code>spec</code></td><td class="nowrap">23・24</td><td><span class="badge b-warn">挙動変化</span> <code>node:test</code> の書き方次第</td></tr>
+<tr><td>出力文字列</td><td><code>util.inspect</code>・<code>assert</code> のメッセージ、TLS のエラーコード名の綴り修正</td><td class="nowrap">23〜26</td><td><span class="badge b-warn">挙動変化</span> 出力やエラーメッセージを文字列で比べるテストが落ちうる</td></tr>
+<tr><td>SQLite</td><td><code>node:sqlite</code> で外部キー制約が既定で有効、二重引用符の文字列リテラルが無効</td><td class="nowrap">23</td><td><span class="badge b-warn">挙動変化</span></td></tr>
+<tr><td>プラットフォーム</td><td>Linux armv7（32 bit）のバイナリ提供終了、macOS 13.5 以上</td><td class="nowrap">24</td><td><span class="badge b-ng">動かない</span> 古い Raspberry Pi 等</td></tr>
+</tbody></table></div>
+
+<h2>追加された機能（上げると使えるもの）</h2>
+<ul>
+<li><code>fetch</code>・Web Streams が安定（21）、<code>WebSocket</code> クライアントがフラグ不要（22）</li>
+<li>TypeScript の型を消して直接実行（22.18 で既定有効、24.12 で安定）。<code>tsconfig.json</code> は読まず、enum 等の型以外の構文は不可</li>
+<li><code>node --run</code>（package.json の scripts 実行）、<code>--watch</code> が安定（22〜23）</li>
+<li><code>localStorage</code>・<code>sessionStorage</code>（25）、<code>URLPattern</code>（24）</li>
+<li>言語機能: <code>using</code>（明示的な資源管理）・<code>RegExp.escape</code>・<code>Float16Array</code>（24）、<code>Temporal</code> が既定で有効（26）</li>
+</ul>
+
+<h2>移行の進め方</h2>
+<ol>
+<li><code>node --trace-deprecation</code> を付けて 20 のまま動かし、非推奨の警告を洗い出す（削除される API の多くは 20 でも警告が出る）</li>
+<li>公式の codemod（移行ガイドに記載）で機械的に書き換えられる箇所を直す</li>
+<li>ネイティブアドオンの依存を洗い出す（<code>npm ls</code> で <code>node-gyp</code>・<code>prebuild</code> を使う物）</li>
+<li>24 で全テストを流す。TLS 接続先の鍵長と、Windows の <code>.cmd</code> 起動を重点的に確かめる</li>
+<li>24 で安定したら 26 を試す</li>
+</ol>
+<div class="callout"><strong>サポート期限の資料間の食い違い。</strong>nodejs/release の表では 20 の終了は 2026-04-30。nodejs.org の過去リリースのページには別の日付が出るという報告もあった。どちらの日付でも、20 がすでにサポート外である点は変わらない。</div>
+</section>
+
+<section class="ch06" id="ch06">
 <h1>対処</h1>
 <h2>優先順位</h2>
 <ol>

@@ -12,7 +12,8 @@ Node.js の定例セキュリティリリースで、High 4 件を含む 10 件�
 2. [脆弱性の一覧と仕組み](#2-脆弱性の一覧と仕組み)
 3. [どの使い方で影響するか（Web・CLI）](#3-どの使い方で影響するかwebcli)
 4. [Node.js 20 を使っている場合](#4-nodejs-20-を使っている場合)
-5. [対処](#5-対処)
+5. [Node.js 20 から 26 で変わること・非互換](#5-nodejs-20-から-26-で変わること非互換)
+6. [対処](#6-対処)
 
 ## 1. 概要と修正版
 
@@ -97,7 +98,62 @@ Node.js 20 は 2026-04-30 にサポートが終了した。公式は終了した
 > [!NOTE]
 > <strong>20 のまま安全にする方法は無い。</strong>22 は 2027-04-30 で終わるため、移るなら 24（2028-04-30 まで）を勧める。
 
-## 5. 対処
+## 5. Node.js 20 から 26 で変わること・非互換
+
+20 から 26 へは 6 メジャー分（21〜26）の変更をまたぐ。公式の移行ガイドは [v20→v22](https://nodejs.org/en/blog/migrations/v20-to-v22) と [v22→v24](https://nodejs.org/en/blog/migrations/v22-to-v24) の 2 本があり、v24→v26 のガイドは見つからなかった。**まず 24 へ上げ、続けて 26 を試す**二段の移行が現実的。
+
+### 主要な版の推移
+
+| Node.js | V8 | NODE_MODULE_VERSION | npm | OpenSSL |
+|---|---|---|---|---|
+| 20.0 | 11.3 | 115 | 9.6 | 3.0 系 |
+| 22.0 | 12.4 | 127 | 10.5 | 3.0 系 |
+| 24.0 | 13.6 | 137 | 11.0 | 3.5 |
+| 26.0 | 14.6 | 147 | 11.12 | 3.5 |
+
+### 非互換になりやすい点
+
+| 分類 | 変更 | 版 | 影響と対処 |
+|---|---|---|---|
+| ネイティブアドオン | NODE_MODULE_VERSION が 115→147。V8 の C++ API も変更。ビルドに C++20 が必要 | 毎版 | ❌ **要再ビルド** node-gyp 製の依存はすべて作り直し。prebuild の対応を確認。Node-API 製なら影響は小さい |
+| TLS | OpenSSL 3.5 の既定セキュリティレベル 2。2048 bit 未満の RSA・DH 鍵、224 bit 未満の ECC 鍵、RC4 を拒否 | 24 | ❌ **接続失敗** 古い証明書の社内サーバや機器への TLS 接続が通らなくなる |
+| Windows | `.bat`・`.cmd` を `spawn` で直接起動できない（CVE-2024-27980 対策） | 20 の後期・22 | ⚠️ **要修正** `shell: true` を付ける |
+| Windows | 32 bit（x86）版の提供終了 | 23 | ❌ **動かない** 32 bit Windows は移行先が無い |
+| モジュール | import assertions（`assert { type: 'json' }`）を削除 | 22 | ⚠️ **要修正** `with { type: 'json' }` に書き換え（20 でも動く書き方） |
+| モジュール | `require()` で ESM を読める（require(esm)）が既定 | 22.12・23 | ⚠️ **挙動変化** `ERR_REQUIRE_ESM` を捕まえて分岐するコードが別の経路に入る |
+| 削除された API | `crypto.createCipher`・`createDecipher` | 22 | ❌ **実行時エラー** `createCipheriv` へ |
+| 削除された API | `util.isString()` 等の `util.isX()` 群・`util._extend`・`util.log` | 23 | ❌ **実行時エラー** `typeof`・`Array.isArray`・`Object.assign` へ。古い依存パッケージで踏みやすい |
+| 削除された API | `tls.createSecurePair()`、`fs.Dirent.path`（→`parentPath`）、`OutgoingMessage._headers` | 24 | ❌ **実行時エラー** codemod あり |
+| 削除された API | `fs.F_OK` 等（→`fs.constants.F_OK`）、`SlowBuffer`、`assert.CallTracker` | 25 | ❌ **実行時エラー** |
+| 削除された API | `http.Server` の `writeHeader()`、`_stream_readable` 等の内部モジュール、`--experimental-transform-types` | 26 | ❌ **実行時エラー** 古いストリーム系の依存に注意 |
+| 非推奨（警告） | `url.parse()`（実行時警告）、組み込み `punycode`、`module.register()` | 21〜26 | ⚠️ **警告** WHATWG `URL` へ |
+| CLI フラグ | `--experimental-permission` → `--permission` | 24 | ⚠️ **要修正** 起動スクリプトの書き換え |
+| 同梱物 | Corepack を同梱しなくなった | 25 | ⚠️ **要修正** `corepack enable` 前提の CI・Dockerfile は `npm i -g corepack` 等が必要 |
+| テスト | テストランナのサブテストを自動で await。既定のレポータが `spec` | 23・24 | ⚠️ **挙動変化** `node:test` の書き方次第 |
+| 出力文字列 | `util.inspect`・`assert` のメッセージ、TLS のエラーコード名の綴り修正 | 23〜26 | ⚠️ **挙動変化** 出力やエラーメッセージを文字列で比べるテストが落ちうる |
+| SQLite | `node:sqlite` で外部キー制約が既定で有効、二重引用符の文字列リテラルが無効 | 23 | ⚠️ **挙動変化** |
+| プラットフォーム | Linux armv7（32 bit）のバイナリ提供終了、macOS 13.5 以上 | 24 | ❌ **動かない** 古い Raspberry Pi 等 |
+
+### 追加された機能（上げると使えるもの）
+
+- `fetch`・Web Streams が安定（21）、`WebSocket` クライアントがフラグ不要（22）
+- TypeScript の型を消して直接実行（22.18 で既定有効、24.12 で安定）。`tsconfig.json` は読まず、enum 等の型以外の構文は不可
+- `node --run`（package.json の scripts 実行）、`--watch` が安定（22〜23）
+- `localStorage`・`sessionStorage`（25）、`URLPattern`（24）
+- 言語機能: `using`（明示的な資源管理）・`RegExp.escape`・`Float16Array`（24）、`Temporal` が既定で有効（26）
+
+### 移行の進め方
+
+1. `node --trace-deprecation` を付けて 20 のまま動かし、非推奨の警告を洗い出す（削除される API の多くは 20 でも警告が出る）
+2. 公式の codemod（移行ガイドに記載）で機械的に書き換えられる箇所を直す
+3. ネイティブアドオンの依存を洗い出す（`npm ls` で `node-gyp`・`prebuild` を使う物）
+4. 24 で全テストを流す。TLS 接続先の鍵長と、Windows の `.cmd` 起動を重点的に確かめる
+5. 24 で安定したら 26 を試す
+
+> [!NOTE]
+> <strong>サポート期限の資料間の食い違い。</strong>nodejs/release の表では 20 の終了は 2026-04-30。nodejs.org の過去リリースのページには別の日付が出るという報告もあった。どちらの日付でも、20 がすでにサポート外である点は変わらない。
+
+## 6. 対処
 
 ### 優先順位
 
