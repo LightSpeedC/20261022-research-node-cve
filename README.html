@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="format-detection" content="telephone=no">
+<title>Node.js 2026年10月 セキュリティリリースの調査</title>
+<style>
+:root {
+	--navy1: #12224d; --navy2: #2f5fbf;
+	--ink: #1c2330; --ink-soft: #4a5568; --line: #d9dfe8; --code-bg: #f4f6fa;
+	--link: #1a4fa0;
+	--accent: var(--navy1); --accent2: var(--navy2); --soft: #f2f5fb;
+}
+.ch01 { --accent: hsl(280,78%,25%); --accent2: hsl(280,58%,55%); --soft: hsl(280,28%,95%); }
+.ch02 { --accent: hsl(210,78%,25%); --accent2: hsl(210,58%,55%); --soft: hsl(210,28%,95%); }
+.ch03 { --accent: hsl(140,78%,25%); --accent2: hsl(140,58%,55%); --soft: hsl(140,28%,95%); }
+.ch04 { --accent: hsl(70,78%,25%); --accent2: hsl(70,58%,55%); --soft: hsl(70,28%,95%); }
+.ch05 { --accent: hsl(0,78%,25%); --accent2: hsl(0,58%,55%); --soft: hsl(0,28%,95%); }
+body { margin: 0; background: #fff; color: var(--ink); font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", sans-serif; font-size: 15.5px; line-height: 1.85; }
+a { color: var(--link); background: transparent; }
+.titlebar { background: linear-gradient(135deg, var(--navy1, #12224d), var(--navy2, #2f5fbf)); color: #fff; padding: 34px 30px 30px; }
+.titlebar .inner { max-width: 1600px; margin: 0 auto; }
+.titlebar h1 { font-size: 1.9em; margin: 0 0 6px; color: #fff; }
+.titlebar .lead { color: #e6ecf8; background: transparent; margin: 0; }
+.titlebar .date { color: #cfd9ee; background: transparent; font-size: 0.9em; margin: 6px 0 0; }
+.wrap { max-width: 1600px; margin: 0 auto; padding: 0 30px; }
+.wrap > .back-home { margin-top: 18px; }
+.back-home { display: inline-block; padding: 2px 12px; border-radius: 6px; background: linear-gradient(100deg, var(--navy1, #12224d), var(--navy2, #2f5fbf)); color: #fff; text-decoration: none; font-weight: 700; }
+.toc ol { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; counter-reset: tocnum; }
+.toc ol li { counter-increment: tocnum; }
+.toc ol a { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; white-space: normal; width: 310px; max-width: 100%; padding: 6px 12px; border-radius: 6px; background: linear-gradient(100deg, var(--accent, #12224d), var(--accent2, #2f5fbf)); color: #fff; text-decoration: none; font-weight: 700; box-sizing: border-box; }
+.toc ol a::before { content: counter(tocnum) ". "; }
+section { background: linear-gradient(180deg, var(--soft, #f2f5fb), #fff); padding: 4px 26px 26px; margin: 34px 0; border-radius: 8px; }
+section h1 { background: linear-gradient(100deg, var(--accent, #12224d), var(--accent2, #2f5fbf)); color: #fff; padding: 14px 20px; margin: 26px 0 20px; border-radius: 8px; font-size: 1.45em; box-shadow: 0 3px 10px rgba(0,0,0,0.18); }
+h2 { border-left: 6px solid var(--accent, #12224d); background: linear-gradient(90deg, var(--soft, #f2f5fb), #fff); color: var(--ink); padding: 6px 12px; margin: 30px 0 12px; font-size: 1.2em; }
+h3 { display: inline-block; border-bottom: 2px dotted var(--accent2, #2f5fbf); padding-bottom: 3px; margin: 20px 0 8px; font-size: 1.05em; }
+code { background: var(--code-bg, #f4f6fa); border: 1px solid var(--line, #d9dfe8); color: #17335f; padding: 0 4px; border-radius: 4px; font-size: 0.92em; }
+pre { background: linear-gradient(180deg, var(--soft, #f2f5fb), #fff); color: var(--ink); border-left: 5px solid var(--accent2, #2f5fbf); padding: 13px 16px; overflow-x: auto; }
+pre code { background: transparent; border: none; padding: 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin: 10px 0; }
+th { background: linear-gradient(100deg, var(--accent, #12224d), var(--accent2, #2f5fbf)); color: #fff; padding: 9px 12px; text-align: left; }
+td { background: #fff; color: var(--ink); padding: 9px 12px; vertical-align: top; border-top: 1px solid var(--line, #d9dfe8); }
+tr:nth-child(even) td { background: #fafbfe; }
+.nowrap { white-space: nowrap; }
+.badge { display: inline-block; padding: 0 8px; border-radius: 6px; color: #fff; font-weight: 700; white-space: nowrap; font-size: 0.88em; }
+.b-ok { background: linear-gradient(100deg, #1d7a3c, #45b56c); color: #fff; }
+.b-ng { background: linear-gradient(100deg, #a51f22, #e05a5c); color: #fff; }
+.b-none { background: linear-gradient(100deg, #5a6472, #97a1ae); color: #fff; }
+.b-warn { background: linear-gradient(100deg, #b8620a, #f0a548); color: #fff; }
+.callout { border-left: 6px solid var(--accent, #12224d); background: linear-gradient(180deg, var(--soft, #f2f5fb), #fff); color: var(--ink); border-radius: 0 8px 8px 0; padding: 10px 16px; margin: 14px 0; }
+.callout strong { color: var(--accent, #12224d); background: transparent; }
+footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
+</style>
+</head>
+<body>
+<div class="titlebar"><div class="inner">
+<h1>Node.js 2026年10月 セキュリティリリースの調査</h1>
+<p class="lead">2026-10-21（米国時間）に公開された 10 件の CVE の内容と、Web サーバ・CLI・Node.js 20 での影響、対処をまとめる</p>
+<p class="date">📅 作成: 2026-10-22 / 更新: 2026-10-22</p>
+</div></div>
+
+<div class="wrap">
+<a class="back-home" href="../" title="ホーム">⌂</a>
+
+<p>Node.js の定例セキュリティリリースで、High 4 件を含む 10 件の脆弱性が修正された。本資料は、どの使い方のときに影響を受けるか（Web サーバ／HTTP クライアント／CLI）と、サポートが終了した Node.js 20 を使い続けている環境での判断材料をまとめる。</p>
+
+<nav class="toc">
+<ol>
+<li class="ch01"><a href="#ch01">概要と修正版</a></li>
+<li class="ch02"><a href="#ch02">脆弱性の一覧と仕組み</a></li>
+<li class="ch03"><a href="#ch03">どの使い方で影響するか（Web・CLI）</a></li>
+<li class="ch04"><a href="#ch04">Node.js 20 を使っている場合</a></li>
+<li class="ch05"><a href="#ch05">対処</a></li>
+</ol>
+</nav>
+
+<section class="ch01" id="ch01">
+<h1>概要と修正版</h1>
+<div class="tablewrap"><table>
+<thead><tr><th>系列</th><th>状態</th><th>サポート終了</th><th>修正版</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">26.x</td><td>Current</td><td class="nowrap">2029-04-30</td><td class="nowrap"><span class="badge b-ok">修正</span> v26.12.1</td></tr>
+<tr><td class="nowrap">24.x</td><td>Active LTS</td><td class="nowrap">2028-04-30</td><td class="nowrap"><span class="badge b-ok">修正</span> v24.22.1</td></tr>
+<tr><td class="nowrap">22.x</td><td>Maintenance LTS</td><td class="nowrap">2027-04-30</td><td class="nowrap"><span class="badge b-ok">修正</span> v22.23.4</td></tr>
+<tr><td class="nowrap">20.x</td><td>End-of-Life</td><td class="nowrap">2026-04-30</td><td class="nowrap"><span class="badge b-ng">修正なし</span></td></tr>
+</tbody></table></div>
+<p>同梱の依存物も更新された。c-ares・Undici（全系列）、OpenSSL（24.x・22.x）、SQLite（22.x）、CA 証明書（侵害された eMudhra 中間 CA の除去。全系列）。</p>
+<p>公式発表には回避策の記載が無く、対処は修正版への更新のみとされている。</p>
+</section>
+
+<section class="ch02" id="ch02">
+<h1>脆弱性の一覧と仕組み</h1>
+<div class="tablewrap"><table>
+<thead><tr><th>CVE</th><th>深刻度</th><th>対象系列</th><th>内容</th><th>影響する側</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">CVE-2026-111497</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>Brotli デコーダの境界外書き込み。リモートコード実行のおそれ</td><td>信頼できない Brotli データを展開する側</td></tr>
+<tr><td class="nowrap">CVE-2026-105483</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24</td><td>全角数字で書いた IP で TLS のホスト名検証を回避（回帰バグ）</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap">CVE-2026-106069</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>正規化で IP に化けるホスト名で TLS のホスト名検証を回避</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap">CVE-2026-105482</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td><code>dns.resolve*</code> が NUL 文字以降を切り捨てる</td><td>外部入力を名前解決する側</td></tr>
+<tr><td class="nowrap">CVE-2026-105481</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>keep-alive のソケットが、要求を送る前に届いた応答を処理する</td><td>HTTP クライアント</td></tr>
+<tr><td class="nowrap">CVE-2026-106072</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>非正規の IPv4 表記で、証明書の DNS 名が IP の接続先を認証する</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap">CVE-2026-106074</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td><code>randomUUID()</code>・<code>randomInt()</code> の乱数キャッシュが snapshot・SEA に焼き込まれ、全プロセスで同じ値になる</td><td>snapshot・SEA で配る CLI / サーバ</td></tr>
+<tr><td class="nowrap">CVE-2026-106070</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td><code>ZipFile</code> がヘッダ検証失敗後に攻撃者の制御するバイト列を返す</td><td>ZIP を読む側</td></tr>
+<tr><td class="nowrap">CVE-2026-106071</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td>Permission Model のワイルドカードで、ファイルの許可が広がりすぎる</td><td><code>--permission</code> 利用時</td></tr>
+<tr><td class="nowrap">CVE-2026-106073</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26 / 24 / 22</td><td><code>fs.realpathSync</code> で Permission Model を回避</td><td><code>--permission</code> 利用時</td></tr>
+</tbody></table></div>
+
+<h2>High 4 件の仕組み</h2>
+<h3>CVE-2026-111497（Brotli）</h3>
+<p>不正な Brotli データの展開中に境界外書き込みが起きる。修正は Google の Brotli 本家のコミットの取り込みで、ブロック種別が 1 つしか宣言されていないストリームにブロック切り替えが現れたら即座に失敗させる。到達する API は <code>zlib.brotliDecompress()</code>・<code>brotliDecompressSync()</code>・<code>createBrotliDecompress()</code> と、応答の <code>Content-Encoding: br</code> を自動で展開する <code>fetch()</code>（Undici）。</p>
+<div class="callout"><strong>fetch は要求していなくても展開する。</strong>クライアントが <code>Accept-Encoding: identity</code> を送っても、悪意あるサーバが <code>br</code> で返せばデコーダが動く。</div>
+<p>Debian・Ubuntu のパッケージで入れた Node.js はシステムの libbrotli を使うことがあり、その場合の修正は libbrotli パッケージ側から来る。</p>
+
+<h3>CVE-2026-105483・CVE-2026-106069（TLS のホスト名検証）</h3>
+<p><code>tls.checkServerIdentity()</code> が、IP の形をした接続先を、証明書の <code>IP Address:</code> ではなく <code>DNS:</code> 項目と照合してしまう。例: <code>0127.0.0.1</code> は <code>url.domainToASCII()</code> では 8 進として <code>87.0.0.1</code> と解釈されるが、OS は <code>127.0.0.1</code> へ接続する。<code>DNS:87.0.0.1</code> の証明書で、別のマシンが本物として通ってしまう。</p>
+<p>悪用には、クライアントが信頼する CA から IP の形をした <code>DNS:</code> 項目を持つ証明書を得る必要があり、条件は厳しい。接続先のホスト名を外部入力で決めるクライアントで問題になる。</p>
+
+<h3>CVE-2026-105482（dns.resolve）</h3>
+<p>c-ares が NUL を文字列の終わりとして扱う。<code>'example.com\0.trusted.corp'</code> を検査では <code>.trusted.corp</code> と見て許可しても、実際に問い合わせるのは <code>example.com</code> になる。<code>dns.lookup()</code>（OS のリゾルバ）は対象外で、<code>dns.resolve*()</code>・<code>dns.reverse()</code> が対象。</p>
+</section>
+
+<section class="ch03" id="ch03">
+<h1>どの使い方で影響するか（Web・CLI）</h1>
+<p>今回の High は、多くが <strong>Node.js が外へ通信するとき（クライアント側）</strong>の問題である。「Web サーバか CLI か」より、<strong>信頼できない相手のデータを受け取るか</strong>で判断する。</p>
+<div class="tablewrap"><table>
+<thead><tr><th>使い方</th><th>影響する CVE</th><th>危険度の目安</th></tr></thead>
+<tbody>
+<tr><td>Web サーバ（Express 等）で、要求本文の <code>Content-Encoding: br</code> を展開する</td><td>111497</td><td><span class="badge b-ng">高</span> 外部から未認証で到達しうる</td></tr>
+<tr><td>Web サーバが外部 API・利用者指定の URL へ <code>fetch</code> する（Webhook・プロキシ・OGP 取得・SSRF になりうる処理）</td><td>111497・105481・TLS 3 件</td><td><span class="badge b-ng">高</span> 接続先を利用者が選べるなら特に</td></tr>
+<tr><td>Web サーバが静的配信・API 応答だけ（圧縮は送るだけ、外へ通信しない）</td><td>ほぼ無し</td><td><span class="badge b-ok">低</span> 圧縮して<strong>送る</strong>側は対象外</td></tr>
+<tr><td>CLI がインターネットからダウンロードする（npm 系ツール・更新確認・スクレイピング）</td><td>111497・TLS 3 件</td><td><span class="badge b-warn">中</span> 接続先が改ざん・なりすましされた場合</td></tr>
+<tr><td>CLI が手元のファイルだけを扱う（ビルド・変換・lint）</td><td>ほぼ無し</td><td><span class="badge b-ok">低</span> 外部の Brotli・ZIP を読まない限り</td></tr>
+<tr><td>CLI・サーバを SEA や startup snapshot で配布している</td><td>106074</td><td><span class="badge b-warn">中</span> UUID・トークンが全プロセスで重複する</td></tr>
+<tr><td>利用者入力のホスト名を <code>dns.resolve*</code> で検査する</td><td>105482</td><td><span class="badge b-warn">中</span> 許可リストのすり抜け</td></tr>
+<tr><td><code>--permission</code> で権限を絞って動かす</td><td>106071・106073</td><td><span class="badge b-none">低</span> Low</td></tr>
+</tbody></table></div>
+<div class="callout"><strong>Web で使うかどうかより、外へ通信するかが効く。</strong>静的なサイトを返すだけのサーバより、外部 URL を取りに行く CLI のほうが今回の High に当たりやすい。</div>
+</section>
+
+<section class="ch04" id="ch04">
+<h1>Node.js 20 を使っている場合</h1>
+<p>Node.js 20 は 2026-04-30 にサポートが終了した。公式は終了した系列を検証しないため、<strong>影響するかどうかの公式の判定は無く、修正版も出ない</strong>。</p>
+<div class="tablewrap"><table>
+<thead><tr><th>CVE</th><th>Node.js 20 での見込み（未検証の推定）</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">111497（Brotli）</td><td><span class="badge b-ng">影響ありと見るべき</span> 同じ Brotli ライブラリを同梱しており、修正は本家のコミット。20 にだけ欠陥が無い根拠は無い</td></tr>
+<tr><td class="nowrap">106069・106072・105482・105481</td><td><span class="badge b-ng">影響ありと見るべき</span> 22 以降の全系列に共通する処理で、22 より古い 20 に入っていない根拠が無い</td></tr>
+<tr><td class="nowrap">105483（全角数字）</td><td><span class="badge b-warn">影響しない可能性</span> 24・26 に入った回帰のため。ただし未確認</td></tr>
+<tr><td class="nowrap">106074（SEA・snapshot）</td><td><span class="badge b-warn">使っていれば要確認</span> 20 では SEA が実験的機能</td></tr>
+</tbody></table></div>
+<p>加えて、20 は 2026-04-30 以降に公開された過去の脆弱性（2026 年 6 月・7 月のリリース分）も修正されていない。今回だけを見て「当たらない」と判断しても、未修正の穴は積み上がっている。</p>
+<div class="callout"><strong>20 のまま安全にする方法は無い。</strong>22 は 2027-04-30 で終わるため、移るなら 24（2028-04-30 まで）を勧める。</div>
+</section>
+
+<section class="ch05" id="ch05">
+<h1>対処</h1>
+<h2>優先順位</h2>
+<ol>
+<li><strong>外部と通信するサーバ・ツールから上げる</strong>。Brotli を展開する Web サーバ、<code>fetch</code> で外部へ取りに行く処理</li>
+<li><strong>Node.js 20 の環境は 24 へ移す</strong>。移すまでの間は、下の暫定策で露出を減らす</li>
+<li><strong>SEA・snapshot で配っている物は、更新した Node.js で作り直す</strong>。実行環境の Node だけを上げても直らない</li>
+<li><strong>Node.js を内蔵する物を確かめる</strong>。Docker のベースイメージ（<code>node:20</code> 等のタグを固定していないか）、Electron、CI のランナ、ディストリのパッケージ（libbrotli も）</li>
+</ol>
+
+<h2>移行までの暫定策（恒久対策ではない）</h2>
+<ul>
+<li>受け取る要求の <code>Content-Encoding: br</code> を前段（リバースプロキシ等）で拒否する</li>
+<li>外部へ <code>fetch</code> する処理は、接続先を許可リストに限る</li>
+<li>利用者入力のホスト名は、NUL を含むもの・非正規の IP 表記を拒否する</li>
+</ul>
+<pre><code class="language-javascript">const net = require('node:net');
+const url = require('node:url');
+
+// 非正規の IP 表記（0127.0.0.1 など）を拒否する
+function isNonCanonicalIP(host) {
+	return !net.isIP(host) &amp;&amp; net.isIP(url.domainToASCII(host)) !== 0;
+}</code></pre>
+
+<h2>版の確認</h2>
+<pre><code class="language-shell">node -v
+node -p "process.versions.brotli + ' / ' + process.versions.openssl"</code></pre>
+
+<h2>出典</h2>
+<ul>
+<li><a href="https://nodejs.org/en/blog/vulnerability/october-2026-security-releases">Node.js — Wednesday, October 21, 2026 Security Releases</a></li>
+<li><a href="https://github.com/nodejs/release#release-schedule">nodejs/release — Release schedule</a></li>
+<li><a href="https://lilting.ch/en/articles/nodejs-tls-dns-brotli-security-release">Node.js v24.22.1 fixes four HIGH CVEs, tested against v24.22.0 and EOL v25.3.0</a></li>
+<li><a href="https://vercel.com/kb/bulletin/node-js-security-advisory">Vercel — Node.js security advisory: Brotli decoder RCE</a></li>
+<li><a href="https://wardio.net/guides/nodejs-brotli-cve-2026-111497/">Wardio — Node.js Brotli RCE CVE-2026-111497: what to update</a></li>
+<li><a href="https://cybersecuritynews.com/node-js-releases-security-updates/">Cyber Security News — Node.js Releases Security Updates</a></li>
+</ul>
+</section>
+</div>
+
+<footer><a class="back-home" href="../" title="ホーム">⌂</a></footer>
+</body>
+</html>
