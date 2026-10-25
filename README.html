@@ -13,11 +13,12 @@
 	--accent: var(--navy1); --accent2: var(--navy2); --soft: #f2f5fb;
 }
 .ch01 { --accent: hsl(280,78%,25%); --accent2: hsl(280,58%,55%); --soft: hsl(280,28%,95%); }
-.ch02 { --accent: hsl(224,78%,25%); --accent2: hsl(224,58%,55%); --soft: hsl(224,28%,95%); }
-.ch03 { --accent: hsl(168,78%,25%); --accent2: hsl(168,58%,55%); --soft: hsl(168,28%,95%); }
-.ch04 { --accent: hsl(112,78%,25%); --accent2: hsl(112,58%,55%); --soft: hsl(112,28%,95%); }
-.ch05 { --accent: hsl(56,78%,25%); --accent2: hsl(56,58%,55%); --soft: hsl(56,28%,95%); }
-.ch06 { --accent: hsl(0,78%,25%); --accent2: hsl(0,58%,55%); --soft: hsl(0,28%,95%); }
+.ch02 { --accent: hsl(233.3,78%,25%); --accent2: hsl(233.3,58%,55%); --soft: hsl(233.3,28%,95%); }
+.ch03 { --accent: hsl(186.7,78%,25%); --accent2: hsl(186.7,58%,55%); --soft: hsl(186.7,28%,95%); }
+.ch04 { --accent: hsl(140,78%,25%); --accent2: hsl(140,58%,55%); --soft: hsl(140,28%,95%); }
+.ch05 { --accent: hsl(93.3,78%,25%); --accent2: hsl(93.3,58%,55%); --soft: hsl(93.3,28%,95%); }
+.ch06 { --accent: hsl(46.7,78%,25%); --accent2: hsl(46.7,58%,55%); --soft: hsl(46.7,28%,95%); }
+.ch07 { --accent: hsl(0,78%,25%); --accent2: hsl(0,58%,55%); --soft: hsl(0,28%,95%); }
 body { margin: 0; background: #fff; color: var(--ink); font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", sans-serif; font-size: 15.5px; line-height: 1.85; }
 a { color: var(--link); background: transparent; }
 .titlebar { background: linear-gradient(135deg, var(--navy1, #12224d), var(--navy2, #2f5fbf)); color: #fff; padding: 34px 30px 30px; }
@@ -59,7 +60,7 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <div class="titlebar"><div class="inner">
 <h1>Node.js 2026年10月 セキュリティリリースの調査</h1>
 <p class="lead">2026-10-21（米国時間）に公開された 10 件の CVE の内容と、Web サーバ・CLI・Node.js 20 での影響、対処をまとめる</p>
-<p class="date">📅 作成: 2026-10-22 / 更新: 2026-10-22</p>
+<p class="date">📅 作成: 2026-10-22 / 更新: 2026-10-25</p>
 </div></div>
 
 <div class="wrap">
@@ -75,6 +76,7 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <li class="ch04"><a href="#ch04">Node.js 20 を使っている場合</a></li>
 <li class="ch05"><a href="#ch05">Node.js 20 から 26 で変わること・非互換</a></li>
 <li class="ch06"><a href="#ch06">対処</a></li>
+<li class="ch07"><a href="#ch07">関連: shell-quote のコマンド注入</a></li>
 </ol>
 </nav>
 
@@ -97,29 +99,61 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <div class="tablewrap"><table>
 <thead><tr><th>CVE</th><th>深刻度</th><th>対象系列</th><th>内容</th><th>影響する側</th></tr></thead>
 <tbody>
-<tr><td class="nowrap">CVE-2026-111497</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>Brotli デコーダの境界外書き込み。リモートコード実行のおそれ</td><td>信頼できない Brotli データを展開する側</td></tr>
-<tr><td class="nowrap">CVE-2026-105483</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24</td><td>全角数字で書いた IP で TLS のホスト名検証を回避（回帰バグ）</td><td>TLS クライアント</td></tr>
-<tr><td class="nowrap">CVE-2026-106069</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>正規化で IP に化けるホスト名で TLS のホスト名検証を回避</td><td>TLS クライアント</td></tr>
-<tr><td class="nowrap">CVE-2026-105482</td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td><code>dns.resolve*</code> が NUL 文字以降を切り捨てる</td><td>外部入力を名前解決する側</td></tr>
-<tr><td class="nowrap">CVE-2026-105481</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>keep-alive のソケットが、要求を送る前に届いた応答を処理する</td><td>HTTP クライアント</td></tr>
-<tr><td class="nowrap">CVE-2026-106072</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>非正規の IPv4 表記で、証明書の DNS 名が IP の接続先を認証する</td><td>TLS クライアント</td></tr>
-<tr><td class="nowrap">CVE-2026-106074</td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td><code>randomUUID()</code>・<code>randomInt()</code> の乱数キャッシュが snapshot・SEA に焼き込まれ、全プロセスで同じ値になる</td><td>snapshot・SEA で配る CLI / サーバ</td></tr>
-<tr><td class="nowrap">CVE-2026-106070</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td><code>ZipFile</code> がヘッダ検証失敗後に攻撃者の制御するバイト列を返す</td><td>ZIP を読む側</td></tr>
-<tr><td class="nowrap">CVE-2026-106071</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td>Permission Model のワイルドカードで、ファイルの許可が広がりすぎる</td><td><code>--permission</code> 利用時</td></tr>
-<tr><td class="nowrap">CVE-2026-106073</td><td><span class="badge b-none">Low</span></td><td class="nowrap">26 / 24 / 22</td><td><code>fs.realpathSync</code> で Permission Model を回避</td><td><code>--permission</code> 利用時</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-111497">CVE-2026-111497</a></td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>Brotli デコーダの境界外書き込み。リモートコード実行のおそれ</td><td>信頼できない Brotli データを展開する側</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-105483">CVE-2026-105483</a></td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24</td><td>全角数字で書いた IP で TLS のホスト名検証を回避（回帰バグ）</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106069">CVE-2026-106069</a></td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td>正規化で IP に化けるホスト名で TLS のホスト名検証を回避</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-105482">CVE-2026-105482</a></td><td><span class="badge b-ng">High</span></td><td class="nowrap">26 / 24 / 22</td><td><code>dns.resolve*</code> が NUL 文字以降を切り捨てる</td><td>外部入力を名前解決する側</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-105481">CVE-2026-105481</a></td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>keep-alive のソケットが、要求を送る前に届いた応答を処理する</td><td>HTTP クライアント</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106072">CVE-2026-106072</a></td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td>非正規の IPv4 表記で、証明書の DNS 名が IP の接続先を認証する</td><td>TLS クライアント</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106074">CVE-2026-106074</a></td><td><span class="badge b-warn">Medium</span></td><td class="nowrap">26 / 24 / 22</td><td><code>randomUUID()</code>・<code>randomInt()</code> の乱数キャッシュが snapshot・SEA に焼き込まれ、全プロセスで同じ値になる</td><td>snapshot・SEA で配る CLI / サーバ</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106070">CVE-2026-106070</a></td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td><code>ZipFile</code> がヘッダ検証失敗後に攻撃者の制御するバイト列を返す</td><td>ZIP を読む側</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106071">CVE-2026-106071</a></td><td><span class="badge b-none">Low</span></td><td class="nowrap">26</td><td>Permission Model のワイルドカードで、ファイルの許可が広がりすぎる</td><td><code>--permission</code> 利用時</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-106073">CVE-2026-106073</a></td><td><span class="badge b-none">Low</span></td><td class="nowrap">26 / 24 / 22</td><td><code>fs.realpathSync</code> で Permission Model を回避</td><td><code>--permission</code> 利用時</td></tr>
 </tbody></table></div>
 
 <h2>High 4 件の仕組み</h2>
-<h3>CVE-2026-111497（Brotli）</h3>
+<h3><a href="https://www.cve.org/CVERecord?id=CVE-2026-111497">CVE-2026-111497</a>（Brotli）</h3>
 <p>不正な Brotli データの展開中に境界外書き込みが起きる。修正は Google の Brotli 本家のコミットの取り込みで、ブロック種別が 1 つしか宣言されていないストリームにブロック切り替えが現れたら即座に失敗させる。到達する API は <code>zlib.brotliDecompress()</code>・<code>brotliDecompressSync()</code>・<code>createBrotliDecompress()</code> と、応答の <code>Content-Encoding: br</code> を自動で展開する <code>fetch()</code>（Undici）。</p>
 <div class="callout"><strong>fetch は要求していなくても展開する。</strong>クライアントが <code>Accept-Encoding: identity</code> を送っても、悪意あるサーバが <code>br</code> で返せばデコーダが動く。</div>
 <p>Debian・Ubuntu のパッケージで入れた Node.js はシステムの libbrotli を使うことがあり、その場合の修正は libbrotli パッケージ側から来る。</p>
 
-<h3>CVE-2026-105483・CVE-2026-106069（TLS のホスト名検証）</h3>
+<h3>別名 node2shell・HTTP2Shell</h3>
+<p>この脆弱性は、報道や各社のブログで <strong>node2shell</strong> (Node2Shell) と呼ばれ、その後 <strong>HTTP2Shell</strong> と呼び直された。どちらも <a href="https://www.cve.org/CVERecord?id=CVE-2026-111497">CVE-2026-111497</a> の 1 件を指す別名で、別の脆弱性ではない。欠陥は Node.js 固有ではなく、Google の Brotli ライブラリ (1.0.3〜1.2.0) そのものにある。</p>
+<div class="tablewrap"><table>
+<thead><tr><th>日付 (2026年)</th><th>出来事</th></tr></thead>
+<tbody>
+<tr><td class="nowrap">2月</td><td>OpenAI が欠陥を発見。Brotli 本家のソースでは直ったが、セキュリティの修正と認識されず、修正を含むリリースが出ないままだった</td></tr>
+<tr><td class="nowrap">10月21日</td><td>Node.js が修正版を公開。<strong>node2shell</strong> と呼ばれ始める</td></tr>
+<tr><td class="nowrap">10月22日</td><td>Python の Brotli パッケージも影響を受けると公表 (Python2Shell とも)</td></tr>
+<tr><td class="nowrap">10月23日</td><td>HTTP の圧縮を扱う多くのライブラリ・製品に及ぶとして <strong>HTTP2Shell</strong> と呼び直される。OpenAI も詳細を公開</td></tr>
+</tbody></table></div>
+<p>深刻度は、CVE を採番した Google が CVSS 4.0 で 9.2 (Critical)、Node.js は High と評価している。Imperva は、改変していない公式の Node.js 24.22.0 のイメージで、任意のコードの実行を再現した (毎回は成功しない)。10月23日時点で、実際の攻撃は報告されていない。</p>
+
+<h3>Node.js で到達する経路</h3>
+<ul>
+<li><span class="badge b-ng">影響</span> <strong>Express 5.0.0〜5.3.0・body-parser 2.0.0〜2.3.0</strong> の <code>json()</code>・<code>raw()</code> 等。要求本文の <code>Content-Encoding: br</code> を展開するため、<strong>認証の前に、外部から 1 回の要求で届く</strong></li>
+<li><span class="badge b-ng">影響</span> 組み込みの <code>fetch()</code>。悪意あるサーバ、または改ざんされた応答の <code>br</code> を自動で展開する</li>
+<li><span class="badge b-ok">低</span> 素の <code>http.createServer</code>。受け取るだけでは要求本文を展開しない</li>
+</ul>
+
+<h3>Node.js 以外</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>対象</th><th>修正版</th></tr></thead>
+<tbody>
+<tr><td>libbrotli (C)</td><td class="nowrap">1.2.1 / 1.1.1 / 1.0.10</td></tr>
+<tr><td>Bun</td><td class="nowrap">1.4.4</td></tr>
+<tr><td>Python (Brotli・brotlicffi)</td><td class="nowrap">1.2.1・1.2.1.0</td></tr>
+<tr><td>Envoy</td><td class="nowrap">1.40.0・1.39.3・1.38.6・1.37.8</td></tr>
+<tr><td>Istio</td><td class="nowrap">1.29.9・1.30.6・1.31.2</td></tr>
+<tr><td>curl・libcurl</td><td>依存の libbrotli を更新。同梱しているアプリは作り直しが必要</td></tr>
+</tbody></table></div>
+<p>.NET・PHP・Ruby・DuckDB・ClickHouse・7-Zip などにも Brotli を同梱する物があり、修正の状況は製品ごとに異なる。Apache・nginx は既定では要求本文の Brotli を展開しない。</p>
+
+<h3><a href="https://www.cve.org/CVERecord?id=CVE-2026-105483">CVE-2026-105483</a>・<a href="https://www.cve.org/CVERecord?id=CVE-2026-106069">CVE-2026-106069</a>（TLS のホスト名検証）</h3>
 <p><code>tls.checkServerIdentity()</code> が、IP の形をした接続先を、証明書の <code>IP Address:</code> ではなく <code>DNS:</code> 項目と照合してしまう。例: <code>0127.0.0.1</code> は <code>url.domainToASCII()</code> では 8 進として <code>87.0.0.1</code> と解釈されるが、OS は <code>127.0.0.1</code> へ接続する。<code>DNS:87.0.0.1</code> の証明書で、別のマシンが本物として通ってしまう。</p>
 <p>悪用には、クライアントが信頼する CA から IP の形をした <code>DNS:</code> 項目を持つ証明書を得る必要があり、条件は厳しい。接続先のホスト名を外部入力で決めるクライアントで問題になる。</p>
 
-<h3>CVE-2026-105482（dns.resolve）</h3>
+<h3><a href="https://www.cve.org/CVERecord?id=CVE-2026-105482">CVE-2026-105482</a>（dns.resolve）</h3>
 <p>c-ares が NUL を文字列の終わりとして扱う。<code>'example.com\0.trusted.corp'</code> を検査では <code>.trusted.corp</code> と見て許可しても、実際に問い合わせるのは <code>example.com</code> になる。<code>dns.lookup()</code>（OS のリゾルバ）は対象外で、<code>dns.resolve*()</code>・<code>dns.reverse()</code> が対象。</p>
 </section>
 
@@ -129,7 +163,7 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <div class="tablewrap"><table>
 <thead><tr><th>使い方</th><th>影響する CVE</th><th>危険度の目安</th></tr></thead>
 <tbody>
-<tr><td>Web サーバ（Express 等）で、要求本文の <code>Content-Encoding: br</code> を展開する</td><td>111497</td><td><span class="badge b-ng">高</span> 外部から未認証で到達しうる</td></tr>
+<tr><td>Web サーバで、要求本文の <code>Content-Encoding: br</code> を展開する (Express 5・body-parser 2 の本文パーサは既定で展開する)</td><td>111497</td><td><span class="badge b-ng">高</span> 外部から未認証で到達しうる</td></tr>
 <tr><td>Web サーバが外部 API・利用者指定の URL へ <code>fetch</code> する（Webhook・プロキシ・OGP 取得・SSRF になりうる処理）</td><td>111497・105481・TLS 3 件</td><td><span class="badge b-ng">高</span> 接続先を利用者が選べるなら特に</td></tr>
 <tr><td>Web サーバが静的配信・API 応答だけ（圧縮は送るだけ、外へ通信しない）</td><td>ほぼ無し</td><td><span class="badge b-ok">低</span> 圧縮して<strong>送る</strong>側は対象外</td></tr>
 <tr><td>CLI がインターネットからダウンロードする（npm 系ツール・更新確認・スクレイピング）</td><td>111497・TLS 3 件</td><td><span class="badge b-warn">中</span> 接続先が改ざん・なりすましされた場合</td></tr>
@@ -176,7 +210,7 @@ footer { max-width: 1600px; margin: 0 auto; padding: 18px 30px 30px; }
 <tbody>
 <tr><td>ネイティブアドオン</td><td>NODE_MODULE_VERSION が 115→147。V8 の C++ API も変更。ビルドに C++20 が必要</td><td class="nowrap">毎版</td><td><span class="badge b-ng">要再ビルド</span> node-gyp 製の依存はすべて作り直し。prebuild の対応を確認。Node-API 製なら影響は小さい</td></tr>
 <tr><td>TLS</td><td>OpenSSL 3.5 の既定セキュリティレベル 2。2048 bit 未満の RSA・DH 鍵、224 bit 未満の ECC 鍵、RC4 を拒否</td><td class="nowrap">24</td><td><span class="badge b-ng">接続失敗</span> 古い証明書の社内サーバや機器への TLS 接続が通らなくなる</td></tr>
-<tr><td>Windows</td><td><code>.bat</code>・<code>.cmd</code> を <code>spawn</code> で直接起動できない（CVE-2024-27980 対策）</td><td class="nowrap">20 の後期・22</td><td><span class="badge b-warn">要修正</span> <code>shell: true</code> を付ける</td></tr>
+<tr><td>Windows</td><td><code>.bat</code>・<code>.cmd</code> を <code>spawn</code> で直接起動できない（<a href="https://www.cve.org/CVERecord?id=CVE-2024-27980">CVE-2024-27980</a> 対策）</td><td class="nowrap">20 の後期・22</td><td><span class="badge b-warn">要修正</span> <code>shell: true</code> を付ける</td></tr>
 <tr><td>Windows</td><td>32 bit（x86）版の提供終了</td><td class="nowrap">23</td><td><span class="badge b-ng">動かない</span> 32 bit Windows は移行先が無い</td></tr>
 <tr><td>モジュール</td><td>import assertions（<code>assert { type: 'json' }</code>）を削除</td><td class="nowrap">22</td><td><span class="badge b-warn">要修正</span> <code>with { type: 'json' }</code> に書き換え（20 でも動く書き方）</td></tr>
 <tr><td>モジュール</td><td><code>require()</code> で ESM を読める（require(esm)）が既定</td><td class="nowrap">22.12・23</td><td><span class="badge b-warn">挙動変化</span> <code>ERR_REQUIRE_ESM</code> を捕まえて分岐するコードが別の経路に入る</td></tr>
@@ -248,8 +282,53 @@ node -p "process.versions.brotli + ' / ' + process.versions.openssl"</code></pre
 <li><a href="https://github.com/nodejs/release#release-schedule">nodejs/release — Release schedule</a></li>
 <li><a href="https://lilting.ch/en/articles/nodejs-tls-dns-brotli-security-release">Node.js v24.22.1 fixes four HIGH CVEs, tested against v24.22.0 and EOL v25.3.0</a></li>
 <li><a href="https://vercel.com/kb/bulletin/node-js-security-advisory">Vercel — Node.js security advisory: Brotli decoder RCE</a></li>
-<li><a href="https://wardio.net/guides/nodejs-brotli-cve-2026-111497/">Wardio — Node.js Brotli RCE CVE-2026-111497: what to update</a></li>
+<li><a href="https://wardio.net/guides/nodejs-brotli-cve-2026-111497/">Wardio — Node.js Brotli RCE <a href="https://www.cve.org/CVERecord?id=CVE-2026-111497">CVE-2026-111497</a>: what to update</a></li>
 <li><a href="https://cybersecuritynews.com/node-js-releases-security-updates/">Cyber Security News — Node.js Releases Security Updates</a></li>
+<li><a href="https://www.imperva.com/blog/node2shell-from-brotli-data-to-remote-code-execution/">Imperva — Node2Shell: From Brotli Data to Remote Code Execution</a></li>
+<li><a href="https://www.aikido.dev/blog/python-packages-vulnerable-node2shell-brotli-cve-2026-111497">Aikido — Node2Shell Brotli vuln evolves to HTTP2Shell</a></li>
+<li><a href="https://strobes.co/blog/http2shell-brotli-rce-cve-2026-111497/">Strobes — HTTP2Shell: Brotli RCE in Node.js and Python</a></li>
+<li><a href="https://cycode.com/blog/node2shell-cve-2026-111497/">Cycode — node2shell (CVE-2026-111497): What to Patch</a></li>
+</ul>
+</section>
+
+<section class="ch07" id="ch07">
+<h1>関連: shell-quote のコマンド注入</h1>
+<p>Node.js 本体ではなく、npm パッケージ <code>shell-quote</code> の脆弱性。シェルのコマンド文字列を組み立てる (<code>quote()</code>)・分解する (<code>parse()</code>) ためのパッケージで、多くのツールに間接依存として入っている。</p>
+<div class="tablewrap"><table>
+<thead><tr><th>CVE</th><th>深刻度</th><th>対象</th><th>修正版</th><th>公開</th></tr></thead>
+<tbody>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2026-9277">CVE-2026-9277</a></td><td><span class="badge b-ng">High</span> CVSS 3.1: 8.1 (4.0: 9.2)</td><td class="nowrap">1.1.0〜1.8.3</td><td class="nowrap"><span class="badge b-ok">修正</span> 1.8.4</td><td class="nowrap">2026-05-22</td></tr>
+<tr><td class="nowrap"><a href="https://www.cve.org/CVERecord?id=CVE-2021-42740">CVE-2021-42740</a></td><td><span class="badge b-ng">Critical</span> CVSS 3.1: 9.8</td><td class="nowrap">1.7.3 未満</td><td class="nowrap"><span class="badge b-ok">修正</span> 1.7.3</td><td class="nowrap">2021-10</td></tr>
+</tbody></table></div>
+
+<h2>CVE-2026-9277 の仕組み</h2>
+<p><code>quote()</code> は、演算子を表すオブジェクト (<code>{ op: ';' }</code> など) の <code>.op</code> を、正規表現 <code>/(.)/g</code> で 1 文字ずつエスケープしていた。JavaScript の <code>.</code> は改行に一致しないため、<code>.op</code> の中の改行がエスケープされずに残る。POSIX シェルは改行をコマンドの区切りと読むので、改行の後ろが別のコマンドとして実行される。</p>
+<pre><code class="language-javascript">const { quote } = require('shell-quote');
+const s = quote([{ op: ';\nid' }]);   // 改行がそのまま残る
+require('child_process').execSync(s, { shell: '/bin/sh' });   // id が実行される</code></pre>
+<p>1.8.4 では <code>.op</code> を正しい演算子の一覧と照合し、それ以外を受け付けない。</p>
+
+<h2>影響する場合</h2>
+<ul>
+<li><span class="badge b-ng">影響</span> 外部の入力から作ったオブジェクトのトークンを <code>quote()</code> に渡し、その結果を <code>exec</code> 等でシェルに渡す。<code>parse(cmd, envFn)</code> の <code>envFn</code> がオブジェクトを返す使い方も経路になりうる</li>
+<li><span class="badge b-ok">低</span> 文字列だけを <code>quote()</code> に渡す一般的な使い方。公表された条件は、オブジェクトのトークンに外部の値が入る場合に限られる</li>
+<li><span class="badge b-ok">低</span> 開発時だけ使うツールの間接依存。ただし CI で外部の値を扱うなら確かめる</li>
+</ul>
+<p>Node.js の版とは関係が無い。Node.js 20 でも 26 でも、パッケージを上げれば直る。</p>
+
+<h2>対処</h2>
+<pre><code class="language-shell">npm ls shell-quote        # どの依存から入っているか
+npm update shell-quote    # 宣言の範囲内なら lockfile の更新で 1.8.4 になる</code></pre>
+<p>間接依存の範囲が 1.8.4 を許さないときは、<code>package.json</code> の <code>overrides</code> (pnpm は <code>pnpm.overrides</code>) で上書きする。Debian・Ubuntu のパッケージ (<code>node-shell-quote</code>) は、各ディストリの更新 (Debian は <a href="https://lists.debian.org/debian-security-announce/2026/msg00211.html">DSA-6300-1</a>) で直る。</p>
+<p>根本的には、外部の値を含むコマンドをシェル経由で実行しない。<code>execFile</code>・<code>spawn</code> に引数を配列で渡せば、シェルを通らず、この種の注入は起きない。</p>
+
+<h2>出典</h2>
+<ul>
+<li><a href="https://www.openwall.com/lists/oss-security/2026/05/23/2">oss-security — CVE-2026-9277: shell-quote before 1.8.4 command injection in quote()</a></li>
+<li><a href="https://github.com/advisories/GHSA-w7jw-789q-3m8p">GHSA-w7jw-789q-3m8p</a></li>
+<li><a href="https://www.kodemsecurity.com/resources/cve-2026-9277-shell-quote-command-injection-affected-versions-detection-and-the-quote-fix">Kodem — CVE-2026-9277: shell-quote Command Injection Fix</a></li>
+<li><a href="https://lists.debian.org/debian-security-announce/2026/msg00211.html">Debian DSA-6300-1 node-shell-quote</a></li>
+<li><a href="https://www.rapid7.com/db/vulnerabilities/cve-2021-42740/">Rapid7 — CVE-2021-42740</a></li>
 </ul>
 </section>
 </div>
